@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_classic.chains import ConversationChain
 from langchain_classic.memory import ConversationSummaryBufferMemory
+from langchain_classic.prompts import PromptTemplate
 
 # Load API keys (requires GROQ_API_KEY in .env)
 load_dotenv()
@@ -23,11 +24,29 @@ class MemoryEngine:
             llm=self.llm,
             max_token_limit=300 
         )
+
+        # Define the Custom Prompt Template
+        # CRITICAL: You MUST include {history} and {input} in the template 
+        # so LangChain knows where to inject the memory and the user's message.
+        custom_template = """You are a highly intelligent, slightly sarcastic AI assistant. 
+        You always provide accurate answers, but you like to add a tiny bit of dry humor or sarcasm to your responses.
+        
+        Current conversation:
+        {history}
+        
+        User: {input}
+        AI:"""
+        
+        prompt = PromptTemplate(
+            input_variables=["history", "input"],
+            template=custom_template
+        )
         
         # The Conversation Pipeline
         self.conversation = ConversationChain(
             llm=self.llm,
             memory=self.memory,
+            prompt=prompt,
             verbose=False
         )
 
